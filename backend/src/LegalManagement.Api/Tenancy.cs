@@ -7,7 +7,10 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 namespace LegalManagement.Api;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public sealed class TenantRequiredAttribute : Attribute;
+public sealed class TenantRequiredAttribute(bool organizationIdInRoute = true) : Attribute
+{
+    public bool OrganizationIdInRoute { get; } = organizationIdInRoute;
+}
 
 public sealed class TenantContext : ITenantContext
 {
@@ -22,13 +25,15 @@ public sealed class TenantMiddleware(RequestDelegate next, ILogger<TenantMiddlew
 {
     public async Task InvokeAsync(HttpContext http, AppDbContext db, TenantContext tenant)
     {
-        if (http.GetEndpoint()?.Metadata.GetMetadata<TenantRequiredAttribute>() is null || http.User.Identity?.IsAuthenticated != true)
+        var requirement = http.GetEndpoint()?.Metadata.GetMetadata<TenantRequiredAttribute>();
+        if (requirement is null || http.User.Identity?.IsAuthenticated != true)
         { await next(http); return; }
         var userId = http.User.FindFirst("sub")!.Value;
         var header = http.Request.Headers["X-Organization-Id"];
         if (header.Count != 1 || !Guid.TryParse(header, out var id))
             throw new ApiException(400, "Se requiere X-Organization-Id válido.");
-        if (!Guid.TryParse(http.Request.RouteValues["id"]?.ToString(), out var routeId) || routeId != id)
+        if (requirement.OrganizationIdInRoute &&
+            (!Guid.TryParse(http.Request.RouteValues["id"]?.ToString(), out var routeId) || routeId != id))
             throw new ApiException(403, "La organización de la ruta no coincide con la organización activa.");
         var membership = await db.Memberships.AsNoTracking().SingleOrDefaultAsync(m => m.UserId == userId &&
             m.OrganizationId == id && m.Status == "ACTIVE" && m.Organization.Status == "ACTIVE");
@@ -46,7 +51,8 @@ public class TenantHeaderOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        if (context.MethodInfo.GetCustomAttributes(typeof(TenantRequiredAttribute), true).Length > 0)
+        if (context.MethodInfo.GetCustomAttributes(typeof(TenantRequiredAttribute), true).Length > 0 ||
+            context.MethodInfo.DeclaringType?.GetCustomAttributes(typeof(TenantRequiredAttribute), true).Length > 0)
             operation.Parameters.Add(new() { Name = "X-Organization-Id", In = ParameterLocation.Header, Required = true,
                 Description = "Debe coincidir con la ruta y tener membresía ACTIVE.", Schema = new() { Type = "string", Format = "uuid" } });
         if (context.ApiDescription.RelativePath?.StartsWith("api/auth/") == true)

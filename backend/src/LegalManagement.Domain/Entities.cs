@@ -55,3 +55,85 @@ public class RefreshToken
     public string? RevokedByIp { get; set; }
     public bool RememberMe { get; set; }
 }
+
+public static class ClientTypes
+{
+    public const string Person = "PERSON";
+    public const string Company = "COMPANY";
+    public static readonly string[] All = [Person, Company];
+}
+
+public static class ClientStatuses
+{
+    public const string Active = "ACTIVE";
+    public const string Inactive = "INACTIVE";
+    public static readonly string[] All = [Active, Inactive];
+}
+
+public class Client
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrganizationId { get; set; }
+    public Organization Organization { get; set; } = null!;
+    public string Type { get; set; } = ClientTypes.Person;
+    public string DisplayName { get; set; } = "";
+    public string IdentificationType { get; set; } = "";
+    public string IdentificationNumber { get; set; } = "";
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? SecondaryPhone { get; set; }
+    public string? Address { get; set; }
+    public string? Notes { get; set; }
+    public string Status { get; set; } = ClientStatuses.Active;
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? LegalName { get; set; }
+    public string? TradeName { get; set; }
+    public string? ContactPerson { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public static class CaseStatuses
+{
+    public const string Open = "OPEN";
+    public const string InProgress = "IN_PROGRESS";
+    public const string Suspended = "SUSPENDED";
+    public const string Closed = "CLOSED";
+    public static readonly string[] All = [Open, InProgress, Suspended, Closed];
+}
+
+public static class CasePriorities
+{
+    public const string Low = "LOW";
+    public const string Medium = "MEDIUM";
+    public const string High = "HIGH";
+    public const string Urgent = "URGENT";
+    public static readonly string[] All = [Low, Medium, High, Urgent];
+}
+
+public class Case
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrganizationId { get; set; }
+    public Organization Organization { get; set; } = null!;
+    public Guid ClientId { get; set; }
+    public Client Client { get; set; } = null!;
+    public string CaseNumber { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string? Description { get; set; }
+    public string CaseType { get; set; } = "";
+    public string Status { get; set; } = CaseStatuses.Open;
+    public string Priority { get; set; } = CasePriorities.Medium;
+    public Guid? ResponsibleMembershipId { get; set; }
+    public Membership? ResponsibleMembership { get; set; }
+    public DateTime OpenedAt { get; set; }
+    public DateTime? ClosedAt { get; set; }
+    public string? Court { get; set; }
+    public string? Jurisdiction { get; set; }
+    public string? Counterparty { get; set; }
+    public string? OpposingCounsel { get; set; }
+    public string? Notes { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}

@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, Building2, CalendarDays, Check, ChevronDown, FileText, FolderOpen, LayoutDashboard, LogOut, Mail, Plus, Scale, Settings, ShieldCheck, Users } from 'lucide-react';
-import { api, post, type Invitation, type Member, type Organization } from './api';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Building2, CalendarDays, Check, ChevronDown, Eye, FileText, FolderOpen, LayoutDashboard, LogOut, Mail, Pencil, Plus, Scale, Search, Settings, ShieldCheck, Users } from 'lucide-react';
+import { api, post, type Client, type Invitation, type Member, type Organization, type Page } from './api';
 import { useAuth, useOrganizations } from './contexts';
+import { CaseDetail, CaseForm, Cases } from './Cases';
 
 const roleName: Record<string, string> = { ADMIN: 'Administrador', LAWYER: 'Abogado', ASSISTANT: 'Asistente', READONLY: 'Solo lectura' };
 const errorText = (e: unknown) => e instanceof Error ? e.message : 'No se pudo completar la operación.';
@@ -101,8 +102,8 @@ function Layout() {
   const { user, logout } = useAuth(); const { activeOrganization: org } = useOrganizations(); const [error, setError] = useState('');
   return <div className="app-layout"><aside className="sidebar"><Brand/><div className="sidebar-section">ESPACIO DE TRABAJO</div>
     <Link className="org-switch" to="/select-organization"><span className="org-avatar small">{org!.name.slice(0,2).toUpperCase()}</span><span>{org!.name}<small>Cambiar organización</small></span><ChevronDown size={16}/></Link>
-    <nav><NavLink to="/app" end><LayoutDashboard size={19}/>Dashboard</NavLink>
-      {[[Users, 'Clientes'], [FolderOpen, 'Casos'], [CalendarDays, 'Agenda'], [FileText, 'Documentos']].map(([Icon, name]) => { const I = Icon as typeof Users; return <button key={String(name)} disabled><I size={19}/>{String(name)}<span className="soon">Próximamente</span></button>; })}
+    <nav><NavLink to="/app" end><LayoutDashboard size={19}/>Dashboard</NavLink><NavLink to="/app/clients"><Users size={19}/>Clientes</NavLink><NavLink to="/app/cases"><FolderOpen size={19}/>Casos</NavLink>
+      {[[CalendarDays, 'Agenda'], [FileText, 'Documentos']].map(([Icon, name]) => { const I = Icon as typeof Users; return <button key={String(name)} disabled><I size={19}/>{String(name)}<span className="soon">Próximamente</span></button>; })}
       <NavLink to="/app/team"><Users size={19}/>Equipo</NavLink><button disabled><Settings size={19}/>Configuración</button></nav>
     <div className="sidebar-bottom"><ShieldCheck size={20}/><p>Tu organización.<br/><strong>Un espacio seguro.</strong></p></div></aside>
     <div className="app-body"><header className="topbar"><span>Mi espacio <span className="breadcrumb">/ {org!.name}</span></span><div className="user-menu"><span className="avatar">{user!.firstName[0]}{user!.lastName[0]}</span><div>{user!.firstName} {user!.lastName}<small>{roleName[org!.roleCode]}</small></div><button title="Cerrar sesión" aria-label="Cerrar sesión" className="icon-button" onClick={() => logout().catch(e => setError(errorText(e)))}><LogOut size={19}/></button></div></header>
@@ -132,6 +133,50 @@ function Team() {
     {org!.roleCode === 'ADMIN' && <section className="panel invite-panel"><h2>Invita a un nuevo miembro</h2><p className="muted">Envía una invitación y define su rol dentro de esta organización.</p><form onSubmit={invite} className="invite-form"><Field name="email" label="Correo electrónico" type="email"/><label className="field">Rol<select name="roleCode" defaultValue="LAWYER">{Object.entries(roleName).map(([code,name]) => <option key={code} value={code}>{name}</option>)}</select></label><button className="button" disabled={busy}><Mail size={17}/>{busy ? 'Enviando…' : 'Enviar invitación'}</button></form></section>}
     <section className="panel members-panel"><div className="table-heading"><h2>Miembros de la organización</h2><span className="count">{members.length}</span></div>{loading ? <Loading/> : <div className="table-scroll"><table><thead><tr><th>Miembro</th><th>Correo electrónico</th><th>Rol</th><th>Estado</th></tr></thead><tbody>{members.map(m => <tr key={m.userId}><td><div className="member-name"><span className="avatar">{m.firstName[0]}{m.lastName[0]}</span>{m.firstName} {m.lastName}</div></td><td>{m.email}</td><td><span className="badge">{roleName[m.roleCode]}</span></td><td><span className="status"><span/>{m.status === 'ACTIVE' ? 'Activo' : 'Suspendido'}</span></td></tr>)}</tbody></table></div>}</section></>;
 }
+function Clients() {
+  const [params, setParams] = useSearchParams(); const [page, setPage] = useState<Page<Client> | null>(null);
+  const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
+  const query = params.toString();
+  useEffect(() => { let live = true; setLoading(true); setError(''); api<Page<Client>>(`/clients${query ? `?${query}` : ''}`)
+    .then(data => { if (live) setPage(data); }).catch(e => { if (live) setError(errorText(e)); })
+    .finally(() => { if (live) setLoading(false); }); return () => { live = false; }; }, [query]);
+  function filter(e: FormEvent<HTMLFormElement>) { e.preventDefault(); const data = new FormData(e.currentTarget); const next = new URLSearchParams();
+    for (const key of ['search', 'type', 'status']) { const value = String(data.get(key) ?? '').trim(); if (value) next.set(key, value); } setParams(next); }
+  return <><div className="page-heading"><div><span className="eyebrow">GESTIÓN DE CLIENTES</span><h1>Clientes</h1><p className="muted">Personas y empresas de tu organización.</p></div>
+    <Link className="button" to="/app/clients/new"><Plus size={17}/>Nuevo cliente</Link></div><Alert>{error}</Alert>
+    <form className="panel client-filters" onSubmit={filter}><label><Search size={17}/><input name="search" aria-label="Buscar clientes" placeholder="Nombre, identificación, correo o teléfono" defaultValue={params.get('search') ?? ''}/></label>
+      <select name="type" aria-label="Filtrar por tipo" defaultValue={params.get('type') ?? ''}><option value="">Todos los tipos</option><option value="PERSON">Persona natural</option><option value="COMPANY">Persona jurídica</option></select>
+      <select name="status" aria-label="Filtrar por estado" defaultValue={params.get('status') ?? ''}><option value="">Todos los estados</option><option value="ACTIVE">Activos</option><option value="INACTIVE">Inactivos</option></select>
+      <button className="button secondary">Filtrar</button></form>
+    <section className="panel clients-table"><div className="table-heading"><h2>Directorio</h2><span className="count">{page?.totalCount ?? 0}</span></div>{loading ? <Loading/> : !page?.items.length ? <div className="empty-state"><Users size={32}/><h3>No hay clientes para mostrar</h3><p>Agrega un cliente o modifica los filtros.</p></div> : <div className="table-scroll"><table><thead><tr><th>Nombre / Razón social</th><th>Tipo</th><th>Identificación</th><th>Correo</th><th>Teléfono</th><th>Estado</th><th>Última actualización</th><th>Acción</th></tr></thead><tbody>{page.items.map(client => <tr key={client.id}><td><strong>{client.displayName}</strong></td><td>{client.type === 'PERSON' ? 'Persona' : 'Empresa'}</td><td>{client.identificationType} · {client.identificationNumber}</td><td>{client.email || '—'}</td><td>{client.phone || '—'}</td><td><span className={`client-status ${client.status.toLowerCase()}`}>{client.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}</span></td><td>{new Date(client.updatedAt).toLocaleDateString('es')}</td><td><Link className="icon-button" title="Ver cliente" to={`/app/clients/${client.id}`}><Eye size={17}/></Link></td></tr>)}</tbody></table></div>}
+      {!!page?.totalPages && page.totalPages > 1 && <div className="pagination"><button disabled={page.page === 1} onClick={() => { const next = new URLSearchParams(params); next.set('page', String(page.page - 1)); setParams(next); }}>Anterior</button><span>Página {page.page} de {page.totalPages}</span><button disabled={page.page === page.totalPages} onClick={() => { const next = new URLSearchParams(params); next.set('page', String(page.page + 1)); setParams(next); }}>Siguiente</button></div>}</section></>;
+}
+
+function ClientForm() {
+  const { id } = useParams(); const editing = !!id; const navigate = useNavigate(); const [client, setClient] = useState<Client | null>(null);
+  const [type, setType] = useState<'PERSON' | 'COMPANY'>('PERSON'); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  useEffect(() => { if (!id) return; api<Client>(`/clients/${id}`).then(value => { setClient(value); setType(value.type); }).catch(e => setError(errorText(e))); }, [id]);
+  async function save(e: FormEvent<HTMLFormElement>) { e.preventDefault(); setBusy(true); setError(''); const data = new FormData(e.currentTarget);
+    const body = Object.fromEntries(data.entries()); try { const saved = editing ? await api<Client>(`/clients/${id}`, { method: 'PUT', body: JSON.stringify(body) }) : await post<Client>('/clients', body); navigate(`/app/clients/${saved.id}`); }
+    catch (err) { setError(errorText(err)); } finally { setBusy(false); } }
+  if (editing && !client && !error) return <Loading/>;
+  return <><div className="page-heading"><div><Link className="back-link" to={editing ? `/app/clients/${id}` : '/app/clients'}><ArrowLeft size={15}/>Volver</Link><h1>{editing ? 'Editar cliente' : 'Nuevo cliente'}</h1><p className="muted">Información de la persona o empresa.</p></div></div><Alert>{error}</Alert>
+    <form className="panel client-form" onSubmit={save}><div className="form-section"><h2>Tipo e identificación</h2><div className="form-row"><label className="field">Tipo<select name="type" value={type} onChange={e => setType(e.target.value as typeof type)}><option value="PERSON">Persona natural</option><option value="COMPANY">Persona jurídica</option></select></label><Field label="Tipo de identificación" name="identificationType" defaultValue={client?.identificationType}/></div><Field label="Número de identificación" name="identificationNumber" defaultValue={client?.identificationNumber}/></div>
+      <div className="form-section"><h2>{type === 'PERSON' ? 'Datos personales' : 'Datos de la empresa'}</h2>{type === 'PERSON' ? <div className="form-row"><Field label="Nombre" name="firstName" defaultValue={client?.firstName}/><Field label="Apellido" name="lastName" defaultValue={client?.lastName}/></div> : <><Field label="Razón social" name="legalName" defaultValue={client?.legalName}/><div className="form-row"><Field label="Nombre comercial" name="tradeName" defaultValue={client?.tradeName}/><Field label="Persona de contacto" name="contactPerson" defaultValue={client?.contactPerson}/></div></>}</div>
+      <div className="form-section"><h2>Contacto</h2><div className="form-row"><Field label="Correo electrónico" name="email" type="email" defaultValue={client?.email}/><Field label="Teléfono" name="phone" defaultValue={client?.phone}/></div><div className="form-row"><Field label="Teléfono secundario" name="secondaryPhone" defaultValue={client?.secondaryPhone}/><Field label="Dirección" name="address" defaultValue={client?.address}/></div><label className="field">Notas<textarea name="notes" maxLength={2000} defaultValue={client?.notes}/></label></div>
+      <div className="form-actions"><Link className="button secondary" to={editing ? `/app/clients/${id}` : '/app/clients'}>Cancelar</Link><button className="button" disabled={busy}>{busy ? 'Guardando…' : 'Guardar cliente'}</button></div></form></>;
+}
+
+function ClientDetail() {
+  const { id } = useParams(); const [client, setClient] = useState<Client | null>(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  useEffect(() => { api<Client>(`/clients/${id}`).then(setClient).catch(e => setError(errorText(e))); }, [id]);
+  async function toggle() { if (!client) return; setBusy(true); setError(''); try { const next = client.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    setClient(await api<Client>(`/clients/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status: next }) })); } catch (e) { setError(errorText(e)); } finally { setBusy(false); } }
+  if (!client && !error) return <Loading/>;
+  return <><Alert>{error}</Alert>{client && <><div className="page-heading"><div><Link className="back-link" to="/app/clients"><ArrowLeft size={15}/>Clientes</Link><h1>{client.displayName}</h1><p className="muted">{client.identificationType} · {client.identificationNumber}</p></div><div className="heading-actions"><button className="button secondary" onClick={toggle} disabled={busy}>{client.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}</button><Link className="button" to={`/app/clients/${id}/edit`}><Pencil size={16}/>Editar</Link></div></div>
+    <div className="client-detail-grid"><section className="panel detail-card"><h2>Información general</h2><dl><dt>Tipo</dt><dd>{client.type === 'PERSON' ? 'Persona natural' : 'Persona jurídica'}</dd><dt>Estado</dt><dd><span className={`client-status ${client.status.toLowerCase()}`}>{client.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}</span></dd>{client.type === 'COMPANY' && <><dt>Razón social</dt><dd>{client.legalName}</dd><dt>Nombre comercial</dt><dd>{client.tradeName || '—'}</dd><dt>Persona de contacto</dt><dd>{client.contactPerson || '—'}</dd></>}</dl></section>
+    <section className="panel detail-card"><h2>Contacto</h2><dl><dt>Correo</dt><dd>{client.email || '—'}</dd><dt>Teléfono</dt><dd>{client.phone || '—'}</dd><dt>Teléfono secundario</dt><dd>{client.secondaryPhone || '—'}</dd><dt>Dirección</dt><dd>{client.address || '—'}</dd></dl></section><section className="panel detail-card full-detail"><h2>Notas</h2><p>{client.notes || 'Sin notas.'}</p><small>Actualizado el {new Date(client.updatedAt).toLocaleString('es')}</small></section></div></>}</>;
+}
 function InvitationPage() {
   const { token } = useParams(); const { user, loading, logout } = useAuth(); const { reload, selectOrganization } = useOrganizations(); const navigate = useNavigate();
   const [invitation, setInvitation] = useState<Invitation | null>(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
@@ -142,6 +187,6 @@ function InvitationPage() {
 }
 export default function App() {
   return <Routes><Route element={<AuthLayout/>}><Route path="/login" element={<AuthForm key="login" mode="login"/>}/><Route path="/register" element={<AuthForm key="register" mode="register"/>}/><Route path="/forgot-password" element={<AuthForm key="forgot" mode="forgot"/>}/><Route path="/reset-password" element={<AuthForm key="reset" mode="reset"/>}/><Route path="/invitations/:token" element={<InvitationPage/>}/></Route>
-    <Route element={<Protected/>}><Route path="/onboarding" element={<OrganizationPage create/>}/><Route path="/select-organization" element={<OrganizationPage/>}/><Route element={<OrganizationGuard/>}><Route path="/app" element={<Layout/>}><Route index element={<Dashboard/>}/><Route path="team" element={<Team/>}/></Route></Route></Route>
+    <Route element={<Protected/>}><Route path="/onboarding" element={<OrganizationPage create/>}/><Route path="/select-organization" element={<OrganizationPage/>}/><Route element={<OrganizationGuard/>}><Route path="/app" element={<Layout/>}><Route index element={<Dashboard/>}/><Route path="clients" element={<Clients/>}/><Route path="clients/new" element={<ClientForm/>}/><Route path="clients/:id" element={<ClientDetail/>}/><Route path="clients/:id/edit" element={<ClientForm/>}/><Route path="cases" element={<Cases/>}/><Route path="cases/new" element={<CaseForm/>}/><Route path="cases/:id" element={<CaseDetail/>}/><Route path="cases/:id/edit" element={<CaseForm/>}/><Route path="team" element={<Team/>}/></Route></Route></Route>
     <Route path="/" element={<Navigate to="/app" replace/>}/><Route path="*" element={<div className="center-page"><h1>Página no encontrada</h1><Link to="/app">Volver a mi espacio</Link></div>}/></Routes>;
 }

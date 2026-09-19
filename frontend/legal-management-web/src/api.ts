@@ -3,6 +3,18 @@ export type Session = { accessToken: string; expiresAt: string; user: User };
 export type Organization = { id: string; name: string; slug: string; roleCode: string };
 export type Member = User & { userId: string; roleCode: string; status: string };
 export type Invitation = { id: string; organizationName: string; email: string; roleCode: string; expiresAt: string };
+export type Client = { id: string; type: 'PERSON' | 'COMPANY'; displayName: string; identificationType: string; identificationNumber: string;
+  email?: string; phone?: string; secondaryPhone?: string; address?: string; notes?: string; status: 'ACTIVE' | 'INACTIVE';
+  firstName?: string; lastName?: string; legalName?: string; tradeName?: string; contactPerson?: string; createdAt: string; updatedAt: string };
+export type CaseStatus = 'OPEN' | 'IN_PROGRESS' | 'SUSPENDED' | 'CLOSED';
+export type CasePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type LegalCase = { id: string; clientId: string; clientName: string; caseNumber: string; title: string; description?: string;
+  caseType: string; status: CaseStatus; priority: CasePriority; responsibleMembershipId?: string; responsibleName?: string;
+  openedAt: string; closedAt?: string; court?: string; jurisdiction?: string; counterparty?: string; opposingCounsel?: string;
+  notes?: string; createdAt: string; updatedAt: string };
+export type CaseOption = { id: string; name: string };
+export type CaseOptions = { clients: CaseOption[]; responsibleMemberships: CaseOption[] };
+export type Page<T> = { items: T[]; page: number; pageSize: number; totalCount: number; totalPages: number };
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 
 let accessToken: string | null = null;

@@ -19,6 +19,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Client> Clients => Set<Client>();
+    public DbSet<Case> Cases => Set<Case>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -62,6 +64,47 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.HasIndex(x => x.TokenHash).IsUnique();
             e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<RefreshToken>().WithMany().HasForeignKey(x => x.ReplacedByTokenId).OnDelete(DeleteBehavior.Restrict);
+        });
+        b.Entity<Client>(e => {
+            e.Property(x => x.Type).HasMaxLength(20).IsRequired();
+            e.Property(x => x.DisplayName).HasMaxLength(240).IsRequired();
+            e.Property(x => x.IdentificationType).HasMaxLength(40).IsRequired();
+            e.Property(x => x.IdentificationNumber).HasMaxLength(80).IsRequired();
+            e.Property(x => x.Email).HasMaxLength(256);
+            e.Property(x => x.Phone).HasMaxLength(40);
+            e.Property(x => x.SecondaryPhone).HasMaxLength(40);
+            e.Property(x => x.Address).HasMaxLength(500);
+            e.Property(x => x.Notes).HasMaxLength(2000);
+            e.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            e.Property(x => x.FirstName).HasMaxLength(120);
+            e.Property(x => x.LastName).HasMaxLength(120);
+            e.Property(x => x.LegalName).HasMaxLength(240);
+            e.Property(x => x.TradeName).HasMaxLength(240);
+            e.Property(x => x.ContactPerson).HasMaxLength(240);
+            e.HasIndex(x => new { x.OrganizationId, x.IdentificationNumber }).IsUnique();
+            e.HasIndex(x => new { x.OrganizationId, x.Status, x.Type });
+            e.HasIndex(x => new { x.OrganizationId, x.DisplayName });
+            e.HasOne(x => x.Organization).WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        });
+        b.Entity<Case>(e => {
+            e.Property(x => x.CaseNumber).HasMaxLength(80).IsRequired();
+            e.Property(x => x.Title).HasMaxLength(240).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.CaseType).HasMaxLength(120).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Priority).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Court).HasMaxLength(240);
+            e.Property(x => x.Jurisdiction).HasMaxLength(240);
+            e.Property(x => x.Counterparty).HasMaxLength(240);
+            e.Property(x => x.OpposingCounsel).HasMaxLength(240);
+            e.Property(x => x.Notes).HasMaxLength(4000);
+            e.HasIndex(x => new { x.OrganizationId, x.CaseNumber }).IsUnique();
+            e.HasIndex(x => new { x.OrganizationId, x.Status, x.Priority });
+            e.HasIndex(x => new { x.OrganizationId, x.ClientId });
+            e.HasIndex(x => new { x.OrganizationId, x.ResponsibleMembershipId });
+            e.HasOne(x => x.Organization).WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Client).WithMany().HasForeignKey(x => x.ClientId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.ResponsibleMembership).WithMany().HasForeignKey(x => x.ResponsibleMembershipId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
