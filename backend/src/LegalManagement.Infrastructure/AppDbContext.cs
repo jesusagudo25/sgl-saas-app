@@ -21,6 +21,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Case> Cases => Set<Case>();
+    public DbSet<CaseStatus> CaseStatuses => Set<CaseStatus>();
+    public DbSet<CaseType> CaseTypes => Set<CaseType>();
+    public DbSet<Court> Courts => Set<Court>();
+    public DbSet<Jurisdiction> Jurisdictions => Set<Jurisdiction>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -102,9 +106,33 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.HasIndex(x => new { x.OrganizationId, x.Status, x.Priority });
             e.HasIndex(x => new { x.OrganizationId, x.ClientId });
             e.HasIndex(x => new { x.OrganizationId, x.ResponsibleMembershipId });
+            e.HasIndex(x => new { x.OrganizationId, x.CaseStatusId });
             e.HasOne(x => x.Organization).WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Client).WithMany().HasForeignKey(x => x.ClientId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.ResponsibleMembership).WithMany().HasForeignKey(x => x.ResponsibleMembershipId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CaseStatus).WithMany().HasForeignKey(x => x.CaseStatusId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CaseTypeReference).WithMany().HasForeignKey(x => x.CaseTypeId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CourtReference).WithMany().HasForeignKey(x => x.CourtId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.JurisdictionReference).WithMany().HasForeignKey(x => x.JurisdictionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        ConfigureCatalog<CaseType>(b);
+        ConfigureCatalog<Court>(b);
+        ConfigureCatalog<Jurisdiction>(b);
+        b.Entity<CaseStatus>(e => {
+            e.Property(x => x.Name).HasMaxLength(160).IsRequired();
+            e.Property(x => x.Code).HasMaxLength(80).IsRequired();
+            e.HasIndex(x => new { x.OrganizationId, x.Name }).IsUnique();
+            e.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
+            e.HasOne(x => x.Organization).WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureCatalog<T>(ModelBuilder b) where T : OrganizationCatalog
+    {
+        b.Entity<T>(e => {
+            e.Property(x => x.Name).HasMaxLength(240).IsRequired();
+            e.HasIndex(x => new { x.OrganizationId, x.Name }).IsUnique();
+            e.HasOne(x => x.Organization).WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

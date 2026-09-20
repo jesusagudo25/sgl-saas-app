@@ -1,0 +1,4 @@
+@media(max-width:760px){
+  .case-filters>*{min-width:0;width:100%}
+  .responsive-data-table{max-width:100%;overflow:hidden}
+}

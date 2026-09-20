@@ -95,4 +95,20 @@ public class ClientTests(LegalManagementApiFactory factory) : IClassFixture<Lega
         var (a, _) = await Setup("same-a"); var (b, _) = await Setup("same-b"); using (a) using (b) { var id = Guid.NewGuid().ToString("N");
         Assert.NotNull(await Create(a, id)); Assert.NotNull(await Create(b, id)); }
     }
+
+    [Theory]
+    [InlineData("PERSON", "CEDULA", true)]
+    [InlineData("PERSON", "PASSPORT", true)]
+    [InlineData("PERSON", "RUC", false)]
+    [InlineData("COMPANY", "RUC", true)]
+    [InlineData("COMPANY", "CEDULA", false)]
+    public async Task IdentificationType_ShouldDependOnClientType(string type, string identificationType, bool valid)
+    {
+        var (http, _) = await Setup($"identification-{type}-{identificationType}"); using (http) {
+        var payload = new { type, identificationType, identificationNumber = Guid.NewGuid().ToString("N"),
+            firstName = type == "PERSON" ? "Ana" : null, lastName = type == "PERSON" ? "Perez" : null,
+            legalName = type == "COMPANY" ? "Empresa Test" : null };
+        var response = await http.PostAsJsonAsync("/api/clients", payload);
+        Assert.Equal(valid ? HttpStatusCode.Created : HttpStatusCode.BadRequest, response.StatusCode); }
+    }
 }

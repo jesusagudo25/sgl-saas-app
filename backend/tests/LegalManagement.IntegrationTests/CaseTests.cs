@@ -38,7 +38,7 @@ public class CaseTests(LegalManagementApiFactory factory) : IClassFixture<LegalM
     }
     private static object Payload(Guid clientId, string number, Guid? responsible = null, string status = "OPEN") => new {
         clientId, caseNumber = number, title = "Caso de prueba", description = "Descripcion", caseType = "CIVIL", status,
-        priority = "HIGH", responsibleMembershipId = responsible, openedAt = DateTime.UtcNow.Date,
+        priority = "HIGH", responsibleMembershipId = responsible, situationDate = DateTime.UtcNow.Date.AddDays(-2), openedAt = DateTime.UtcNow.Date,
         court = "Juzgado Primero", jurisdiction = "Panama", counterparty = "Contraparte", opposingCounsel = "Abogado", notes = "Notas" };
     private static async Task<CaseDto> CreateCase(HttpClient http, Guid clientId, string? number = null, Guid? responsible = null)
     {
@@ -99,4 +99,12 @@ public class CaseTests(LegalManagementApiFactory factory) : IClassFixture<LegalM
     [Fact] public async Task CreateCase_ShouldAllowSameCaseNumberInDifferentOrganizations()
     { var (a, _, _) = await Setup("same-case-a"); var (b, _, _) = await Setup("same-case-b"); using (a) using (b) {
       await CreateCase(a, (await CreateClient(a)).Id, "EXP-200"); await CreateCase(b, (await CreateClient(b)).Id, "EXP-200"); } }
+
+    [Fact] public async Task SituationDate_ShouldPersistAndUpdate()
+    { var (http, _, _) = await Setup("situation-date"); using (http) { var client = await CreateClient(http); var created = await CreateCase(http, client.Id);
+      Assert.Equal(DateTime.UtcNow.Date.AddDays(-2), created.SituationDate?.Date);
+      var payload = new { clientId = client.Id, caseNumber = created.CaseNumber, title = created.Title, caseType = "CIVIL", status = "OPEN",
+          priority = "HIGH", openedAt = DateTime.UtcNow.Date, situationDate = DateTime.UtcNow.Date.AddDays(-5) };
+      var response = await http.PutAsJsonAsync($"/api/cases/{created.Id}", payload); response.EnsureSuccessStatusCode();
+      Assert.Equal(DateTime.UtcNow.Date.AddDays(-5), (await response.Content.ReadFromJsonAsync<CaseDto>())!.SituationDate?.Date); } }
 }

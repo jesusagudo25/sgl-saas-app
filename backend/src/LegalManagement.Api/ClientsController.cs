@@ -79,8 +79,7 @@ public class ClientsController(AppDbContext db, ITenantContext tenant) : Control
         client.LegalName = type == ClientTypes.Company ? legalName : null; client.TradeName = type == ClientTypes.Company ? tradeName : null;
         client.ContactPerson = type == ClientTypes.Company ? Clean(request.ContactPerson) : null;
         client.DisplayName = type == ClientTypes.Person ? $"{firstName} {lastName}" : tradeName ?? legalName!;
-        client.IdentificationType = request.IdentificationType.Trim().ToUpperInvariant(); client.IdentificationNumber = request.IdentificationNumber.Trim().ToUpperInvariant();
-        if (client.IdentificationType.Length == 0 || client.IdentificationNumber.Length == 0) throw new ApiException(400, "La identificación es obligatoria.");
+        (client.IdentificationType, client.IdentificationNumber) = ClientIdentificationPolicy.NormalizeAndValidate(type, request.IdentificationType, request.IdentificationNumber);
         client.Email = Clean(request.Email)?.ToLowerInvariant(); client.Phone = Clean(request.Phone); client.SecondaryPhone = Clean(request.SecondaryPhone);
         client.Address = Clean(request.Address); client.Notes = Clean(request.Notes); client.UpdatedAt = DateTime.UtcNow;
     }

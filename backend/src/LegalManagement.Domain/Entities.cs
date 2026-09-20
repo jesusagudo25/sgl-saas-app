@@ -70,6 +70,15 @@ public static class ClientStatuses
     public static readonly string[] All = [Active, Inactive];
 }
 
+public static class IdentificationTypes
+{
+    public const string Cedula = "CEDULA";
+    public const string Passport = "PASSPORT";
+    public const string Ruc = "RUC";
+    public static readonly string[] Person = [Cedula, Passport];
+    public static readonly string[] Company = [Ruc];
+}
+
 public class Client
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -124,16 +133,49 @@ public class Case
     public string? Description { get; set; }
     public string CaseType { get; set; } = "";
     public string Status { get; set; } = CaseStatuses.Open;
+    public Guid? CaseStatusId { get; set; }
+    public CaseStatus? CaseStatus { get; set; }
+    public Guid? CaseTypeId { get; set; }
+    public CaseType? CaseTypeReference { get; set; }
     public string Priority { get; set; } = CasePriorities.Medium;
     public Guid? ResponsibleMembershipId { get; set; }
     public Membership? ResponsibleMembership { get; set; }
     public DateTime OpenedAt { get; set; }
+    public DateTime? SituationDate { get; set; }
     public DateTime? ClosedAt { get; set; }
     public string? Court { get; set; }
+    public Guid? CourtId { get; set; }
+    public Court? CourtReference { get; set; }
     public string? Jurisdiction { get; set; }
+    public Guid? JurisdictionId { get; set; }
+    public Jurisdiction? JurisdictionReference { get; set; }
     public string? Counterparty { get; set; }
     public string? OpposingCounsel { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+
+public abstract class OrganizationCatalog
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrganizationId { get; set; }
+    public Organization Organization { get; set; } = null!;
+    public string Name { get; set; } = "";
+    public bool IsActive { get; set; } = true;
+    public int SortOrder { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class CaseStatus : OrganizationCatalog
+{
+    public string Code { get; set; } = "";
+    public bool IsOpen { get; set; }
+    public bool IsClosed { get; set; }
+    public bool IsInnocent { get; set; }
+    public bool IsGuilty { get; set; }
+}
+public class CaseType : OrganizationCatalog { }
+public class Court : OrganizationCatalog { }
+public class Jurisdiction : OrganizationCatalog { }

@@ -9,11 +9,13 @@ export type Client = { id: string; type: 'PERSON' | 'COMPANY'; displayName: stri
 export type CaseStatus = 'OPEN' | 'IN_PROGRESS' | 'SUSPENDED' | 'CLOSED';
 export type CasePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type LegalCase = { id: string; clientId: string; clientName: string; caseNumber: string; title: string; description?: string;
-  caseType: string; status: CaseStatus; priority: CasePriority; responsibleMembershipId?: string; responsibleName?: string;
-  openedAt: string; closedAt?: string; court?: string; jurisdiction?: string; counterparty?: string; opposingCounsel?: string;
+  caseType: string; caseTypeId?: string; status: string; caseStatusId?: string; priority: CasePriority; responsibleMembershipId?: string; responsibleName?: string;
+  openedAt: string; situationDate?: string; closedAt?: string; court?: string; courtId?: string; jurisdiction?: string; jurisdictionId?: string; counterparty?: string; opposingCounsel?: string;
   notes?: string; createdAt: string; updatedAt: string };
 export type CaseOption = { id: string; name: string };
-export type CaseOptions = { clients: CaseOption[]; responsibleMemberships: CaseOption[] };
+export type CaseStatusOption = CaseOption & { code: string; isOpen: boolean; isClosed: boolean; isInnocent: boolean; isGuilty: boolean };
+export type CaseOptions = { clients: CaseOption[]; responsibleMemberships: CaseOption[]; caseStatuses: CaseStatusOption[]; caseTypes: CaseOption[]; courts: CaseOption[]; jurisdictions: CaseOption[] };
+export type CatalogItem = CaseOption & { isActive: boolean; sortOrder: number; code?: string; isOpen?: boolean; isClosed?: boolean; isInnocent?: boolean; isGuilty?: boolean };
 export type Page<T> = { items: T[]; page: number; pageSize: number; totalCount: number; totalPages: number };
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 

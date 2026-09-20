@@ -3,6 +3,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider, OrganizationProvider } from './contexts';
 import App from './App';
 import './styles.css';
+import './adenda.css';
+import './responsive-fixes.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <BrowserRouter><AuthProvider><OrganizationProvider><App /></OrganizationProvider></AuthProvider></BrowserRouter>
 );

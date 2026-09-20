@@ -58,20 +58,35 @@ public record CaseRequest(
     [Required, StringLength(240)] string Title,
     [Required] Guid ClientId,
     [StringLength(120)] string? CaseType,
+    Guid? CaseTypeId,
     [StringLength(4000)] string? Description,
-    [Required] string Status,
+    string? Status,
+    Guid? CaseStatusId,
     [Required] string Priority,
     Guid? ResponsibleMembershipId,
     [Required] DateTime OpenedAt,
+    DateTime? SituationDate,
     [StringLength(240)] string? Court,
+    Guid? CourtId,
     [StringLength(240)] string? Jurisdiction,
+    Guid? JurisdictionId,
     [StringLength(240)] string? Counterparty,
     [StringLength(240)] string? OpposingCounsel,
     [StringLength(4000)] string? Notes);
 public record ChangeCaseStatusRequest([Required] string Status);
 public record CaseDto(Guid Id, Guid ClientId, string ClientName, string CaseNumber, string Title, string? Description,
-    string CaseType, string Status, string Priority, Guid? ResponsibleMembershipId, string? ResponsibleName,
-    DateTime OpenedAt, DateTime? ClosedAt, string? Court, string? Jurisdiction, string? Counterparty,
+    string CaseType, Guid? CaseTypeId, string Status, Guid? CaseStatusId, string Priority, Guid? ResponsibleMembershipId, string? ResponsibleName,
+    DateTime OpenedAt, DateTime? SituationDate, DateTime? ClosedAt, string? Court, Guid? CourtId, string? Jurisdiction, Guid? JurisdictionId, string? Counterparty,
     string? OpposingCounsel, string? Notes, DateTime CreatedAt, DateTime UpdatedAt);
 public record CaseOptionDto(Guid Id, string Name);
-public record CaseOptionsDto(IReadOnlyList<CaseOptionDto> Clients, IReadOnlyList<CaseOptionDto> ResponsibleMemberships);
+public record CaseStatusOptionDto(Guid Id, string Name, string Code, bool IsOpen, bool IsClosed, bool IsInnocent, bool IsGuilty);
+public record CaseOptionsDto(IReadOnlyList<CaseOptionDto> Clients, IReadOnlyList<CaseOptionDto> ResponsibleMemberships,
+    IReadOnlyList<CaseStatusOptionDto> CaseStatuses, IReadOnlyList<CaseOptionDto> CaseTypes,
+    IReadOnlyList<CaseOptionDto> Courts, IReadOnlyList<CaseOptionDto> Jurisdictions);
+public record CatalogRequest([Required, StringLength(240)] string Name, int SortOrder = 0);
+public record CaseStatusRequest([Required, StringLength(160)] string Name, [Required, StringLength(80)] string Code,
+    bool IsOpen, bool IsClosed, bool IsInnocent, bool IsGuilty, int SortOrder = 0);
+public record CatalogStatusRequest(bool IsActive);
+public record CatalogDto(Guid Id, string Name, bool IsActive, int SortOrder, DateTime CreatedAt, DateTime UpdatedAt);
+public record CaseStatusDto(Guid Id, string Name, string Code, bool IsActive, bool IsOpen, bool IsClosed,
+    bool IsInnocent, bool IsGuilty, int SortOrder, DateTime CreatedAt, DateTime UpdatedAt);
