@@ -91,7 +91,12 @@ public class Client
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public string? SecondaryPhone { get; set; }
+    public string? MobilePhone { get; set; }
+    public string? Website { get; set; }
     public string? Address { get; set; }
+    public string? Country { get; set; }
+    public string? ProvinceOrState { get; set; }
+    public string? City { get; set; }
     public string? Notes { get; set; }
     public string Status { get; set; } = ClientStatuses.Active;
     public string? FirstName { get; set; }
@@ -99,6 +104,10 @@ public class Client
     public string? LegalName { get; set; }
     public string? TradeName { get; set; }
     public string? ContactPerson { get; set; }
+    public string? Dv { get; set; }
+    public string? ContactPersonIdentification { get; set; }
+    public string? ContactPersonEmail { get; set; }
+    public string? ContactPersonPhone { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

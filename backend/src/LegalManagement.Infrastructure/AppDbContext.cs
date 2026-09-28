@@ -77,7 +77,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.Email).HasMaxLength(256);
             e.Property(x => x.Phone).HasMaxLength(40);
             e.Property(x => x.SecondaryPhone).HasMaxLength(40);
-            e.Property(x => x.Address).HasMaxLength(500);
+            e.Property(x => x.MobilePhone).HasMaxLength(40);
+            e.Property(x => x.Website).HasMaxLength(256);
+            e.Property(x => x.Address).HasMaxLength(1000);
+            e.Property(x => x.Country).HasMaxLength(120);
+            e.Property(x => x.ProvinceOrState).HasMaxLength(120);
+            e.Property(x => x.City).HasMaxLength(120);
             e.Property(x => x.Notes).HasMaxLength(2000);
             e.Property(x => x.Status).HasMaxLength(20).IsRequired();
             e.Property(x => x.FirstName).HasMaxLength(120);
@@ -85,6 +90,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.LegalName).HasMaxLength(240);
             e.Property(x => x.TradeName).HasMaxLength(240);
             e.Property(x => x.ContactPerson).HasMaxLength(240);
+            e.Property(x => x.Dv).HasMaxLength(20);
+            e.Property(x => x.ContactPersonIdentification).HasMaxLength(80);
+            e.Property(x => x.ContactPersonEmail).HasMaxLength(256);
+            e.Property(x => x.ContactPersonPhone).HasMaxLength(40);
             e.HasIndex(x => new { x.OrganizationId, x.IdentificationNumber }).IsUnique();
             e.HasIndex(x => new { x.OrganizationId, x.Status, x.Type });
             e.HasIndex(x => new { x.OrganizationId, x.DisplayName });

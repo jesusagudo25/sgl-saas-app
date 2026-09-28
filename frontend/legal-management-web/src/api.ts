@@ -4,8 +4,11 @@ export type Organization = { id: string; name: string; slug: string; roleCode: s
 export type Member = User & { userId: string; roleCode: string; status: string };
 export type Invitation = { id: string; organizationName: string; email: string; roleCode: string; expiresAt: string };
 export type Client = { id: string; type: 'PERSON' | 'COMPANY'; displayName: string; identificationType: string; identificationNumber: string;
-  email?: string; phone?: string; secondaryPhone?: string; address?: string; notes?: string; status: 'ACTIVE' | 'INACTIVE';
-  firstName?: string; lastName?: string; legalName?: string; tradeName?: string; contactPerson?: string; createdAt: string; updatedAt: string };
+  email?: string; phone?: string; secondaryPhone?: string; mobilePhone?: string; website?: string; address?: string;
+  country?: string; provinceOrState?: string; city?: string; notes?: string; status: 'ACTIVE' | 'INACTIVE';
+  firstName?: string; lastName?: string; legalName?: string; tradeName?: string; contactPerson?: string;
+  dv?: string; contactPersonIdentification?: string; contactPersonEmail?: string; contactPersonPhone?: string;
+  createdAt: string; updatedAt: string };
 export type CaseStatus = 'OPEN' | 'IN_PROGRESS' | 'SUSPENDED' | 'CLOSED';
 export type CasePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type LegalCase = { id: string; clientId: string; clientName: string; caseNumber: string; title: string; description?: string;

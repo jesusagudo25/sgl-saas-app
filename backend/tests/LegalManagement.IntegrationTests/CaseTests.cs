@@ -107,4 +107,19 @@ public class CaseTests(LegalManagementApiFactory factory) : IClassFixture<LegalM
           priority = "HIGH", openedAt = DateTime.UtcNow.Date, situationDate = DateTime.UtcNow.Date.AddDays(-5) };
       var response = await http.PutAsJsonAsync($"/api/cases/{created.Id}", payload); response.EnsureSuccessStatusCode();
       Assert.Equal(DateTime.UtcNow.Date.AddDays(-5), (await response.Content.ReadFromJsonAsync<CaseDto>())!.SituationDate?.Date); } }
+
+    [Fact] public async Task IndividualFilters_ShouldCombineNumberTitleCatalogAndSituationDates()
+    { var (http, _, _) = await Setup("case-filters"); using (http) {
+      var client = await CreateClient(http);
+      var first = await CreateCase(http, client.Id, "EXP-ALPHA");
+      await CreateCase(http, client.Id, "EXP-BETA");
+      var options = (await http.GetFromJsonAsync<CaseOptionsDto>("/api/cases/options"))!;
+      var type = options.CaseTypes.Single(x => x.Name == first.CaseType);
+      var court = options.Courts.Single(x => x.Name == first.Court);
+      var day = DateTime.UtcNow.Date.AddDays(-2).ToString("yyyy-MM-dd");
+      var page = await http.GetFromJsonAsync<PagedResult<CaseDto>>($"/api/cases?caseNumber=ALPHA&title=prueba&caseTypeId={type.Id}&courtId={court.Id}&situationDateFrom={day}&situationDateTo={day}");
+      Assert.Single(page!.Items); Assert.Equal(first.Id, page.Items[0].Id);
+      var none = await http.GetFromJsonAsync<PagedResult<CaseDto>>("/api/cases?caseNumber=ALPHA&title=otro");
+      Assert.Empty(none!.Items);
+    } }
 }

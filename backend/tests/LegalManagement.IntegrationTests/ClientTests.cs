@@ -111,4 +111,40 @@ public class ClientTests(LegalManagementApiFactory factory) : IClassFixture<Lega
         var response = await http.PostAsJsonAsync("/api/clients", payload);
         Assert.Equal(valid ? HttpStatusCode.Created : HttpStatusCode.BadRequest, response.StatusCode); }
     }
+
+    [Fact]
+    public async Task CompanyProfile_ShouldSaveRucDvAndContactFields()
+    {
+        var (http, _) = await Setup("company-profile"); using (http) {
+            var response = await http.PostAsJsonAsync("/api/clients", new {
+                type = "COMPANY", identificationType = "RUC", identificationNumber = Guid.NewGuid().ToString("N"),
+                legalName = "Firma Legal", dv = "12", contactPerson = "María López",
+                contactPersonIdentification = "8-123-456", contactPersonEmail = "CONTACTO@EXAMPLE.TEST",
+                contactPersonPhone = "2222-0000", mobilePhone = "6000-9999", website = "https://example.test",
+                address = "Avenida principal\nOficina 4", country = "Panamá", provinceOrState = "Panamá", city = "Panamá"
+            });
+            response.EnsureSuccessStatusCode();
+            var created = (await response.Content.ReadFromJsonAsync<ClientDto>())!;
+            Assert.Equal("12", created.Dv);
+            Assert.Equal("contacto@example.test", created.ContactPersonEmail);
+            Assert.Equal("Panamá", created.City);
+            Assert.Contains("\n", created.Address);
+            var found = await http.GetFromJsonAsync<ClientDto>($"/api/clients/{created.Id}");
+            Assert.Equal(created.MobilePhone, found!.MobilePhone);
+        }
+    }
+
+    [Fact]
+    public async Task IndividualFilters_ShouldCombineWithinTenant()
+    {
+        var (http, _) = await Setup("client-filters"); using (http) {
+            var matching = await Create(http, Guid.NewGuid().ToString("N"), "Elena");
+            await Create(http, Guid.NewGuid().ToString("N"), "Ana");
+            var page = await http.GetFromJsonAsync<PagedResult<ClientDto>>("/api/clients?name=Elena&email=ana%40example.test&phone=6000");
+            Assert.Single(page!.Items);
+            Assert.Equal(matching.Id, page.Items[0].Id);
+            var none = await http.GetFromJsonAsync<PagedResult<ClientDto>>("/api/clients?name=Elena&identification=NO-MATCH");
+            Assert.Empty(none!.Items);
+        }
+    }
 }

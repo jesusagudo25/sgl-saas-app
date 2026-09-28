@@ -39,18 +39,29 @@ public record ClientRequest(
     [EmailAddress, StringLength(256)] string? Email,
     [StringLength(40)] string? Phone,
     [StringLength(40)] string? SecondaryPhone,
-    [StringLength(500)] string? Address,
+    [StringLength(1000)] string? Address,
     [StringLength(2000)] string? Notes,
     [StringLength(120)] string? FirstName,
     [StringLength(120)] string? LastName,
     [StringLength(240)] string? LegalName,
     [StringLength(240)] string? TradeName,
-    [StringLength(240)] string? ContactPerson);
+    [StringLength(240)] string? ContactPerson,
+    [StringLength(40)] string? MobilePhone = null,
+    [StringLength(256)] string? Website = null,
+    [StringLength(120)] string? Country = null,
+    [StringLength(120)] string? ProvinceOrState = null,
+    [StringLength(120)] string? City = null,
+    [StringLength(20)] string? Dv = null,
+    [StringLength(80)] string? ContactPersonIdentification = null,
+    [EmailAddress, StringLength(256)] string? ContactPersonEmail = null,
+    [StringLength(40)] string? ContactPersonPhone = null);
 public record ChangeClientStatusRequest([Required] string Status);
 public record ClientDto(Guid Id, string Type, string DisplayName, string IdentificationType,
     string IdentificationNumber, string? Email, string? Phone, string? SecondaryPhone, string? Address,
     string? Notes, string Status, string? FirstName, string? LastName, string? LegalName, string? TradeName,
-    string? ContactPerson, DateTime CreatedAt, DateTime UpdatedAt);
+    string? ContactPerson, DateTime CreatedAt, DateTime UpdatedAt,
+    string? MobilePhone, string? Website, string? Country, string? ProvinceOrState, string? City,
+    string? Dv, string? ContactPersonIdentification, string? ContactPersonEmail, string? ContactPersonPhone);
 public record PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount, int TotalPages);
 
 public record CaseRequest(

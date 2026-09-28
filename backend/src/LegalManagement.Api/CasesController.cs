@@ -13,7 +13,9 @@ public class CasesController(AppDbContext db, ITenantContext tenant) : Controlle
     [HttpGet]
     public async Task<ActionResult<PagedResult<CaseDto>>> List([FromQuery] string? search, [FromQuery] Guid? clientId,
         [FromQuery] Guid? caseStatusId, [FromQuery] string? status, [FromQuery] string? priority,
-        [FromQuery] Guid? responsibleMembershipId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        [FromQuery] Guid? responsibleMembershipId, [FromQuery] string? caseNumber, [FromQuery] string? title,
+        [FromQuery] Guid? caseTypeId, [FromQuery] Guid? courtId, [FromQuery] DateTime? situationDateFrom,
+        [FromQuery] DateTime? situationDateTo, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         if (page < 1 || pageSize is < 1 or > 100) throw new ApiException(400, "La paginación no es válida.");
         var normalizedPriority = NormalizeOptional(priority, CasePriorities.All, "Prioridad de caso inválida.");
@@ -24,6 +26,12 @@ public class CasesController(AppDbContext db, ITenantContext tenant) : Controlle
         if (caseStatusId.HasValue) query = query.Where(x => x.CaseStatusId == caseStatusId);
         else if (normalizedStatus is not null) query = query.Where(x => x.Status == normalizedStatus || (x.CaseStatus != null && x.CaseStatus.Code == normalizedStatus));
         if (normalizedPriority is not null) query = query.Where(x => x.Priority == normalizedPriority);
+        if (!string.IsNullOrWhiteSpace(caseNumber)) { var value = caseNumber.Trim(); query = query.Where(x => x.CaseNumber.Contains(value)); }
+        if (!string.IsNullOrWhiteSpace(title)) { var value = title.Trim(); query = query.Where(x => x.Title.Contains(value)); }
+        if (caseTypeId.HasValue) query = query.Where(x => x.CaseTypeId == caseTypeId);
+        if (courtId.HasValue) query = query.Where(x => x.CourtId == courtId);
+        if (situationDateFrom.HasValue) query = query.Where(x => x.SituationDate >= situationDateFrom.Value.Date);
+        if (situationDateTo.HasValue) query = query.Where(x => x.SituationDate < situationDateTo.Value.Date.AddDays(1));
         if (!string.IsNullOrWhiteSpace(search)) { var value = search.Trim(); query = query.Where(x => x.CaseNumber.Contains(value) || x.Title.Contains(value) || x.Client.DisplayName.Contains(value) || (x.Counterparty != null && x.Counterparty.Contains(value)) || (x.CourtReference != null && x.CourtReference.Name.Contains(value)) || (x.Court != null && x.Court.Contains(value))); }
         var total = await query.CountAsync(); var items = await Project(query.OrderByDescending(x => x.OpenedAt).ThenBy(x => x.CaseNumber)).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
         return new PagedResult<CaseDto>(items, page, pageSize, total, (int)Math.Ceiling(total / (double)pageSize));

@@ -12,7 +12,8 @@ public class ClientsController(AppDbContext db, ITenantContext tenant) : Control
 {
     [HttpGet]
     public async Task<ActionResult<PagedResult<ClientDto>>> List([FromQuery] string? search, [FromQuery] string? type,
-        [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        [FromQuery] string? status, [FromQuery] string? name, [FromQuery] string? identification,
+        [FromQuery] string? email, [FromQuery] string? phone, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         if (page < 1 || pageSize is < 1 or > 100) throw new ApiException(400, "La paginación no es válida.");
         if (type is not null && !ClientTypes.All.Contains(type.ToUpperInvariant())) throw new ApiException(400, "Tipo de cliente inválido.");
@@ -20,6 +21,10 @@ public class ClientsController(AppDbContext db, ITenantContext tenant) : Control
         var query = db.Clients.AsNoTracking().Where(x => x.OrganizationId == tenant.OrganizationId);
         if (!string.IsNullOrWhiteSpace(type)) { var value = type.Trim().ToUpperInvariant(); query = query.Where(x => x.Type == value); }
         if (!string.IsNullOrWhiteSpace(status)) { var value = status.Trim().ToUpperInvariant(); query = query.Where(x => x.Status == value); }
+        if (!string.IsNullOrWhiteSpace(name)) { var value = name.Trim(); query = query.Where(x => x.DisplayName.Contains(value) || (x.LegalName != null && x.LegalName.Contains(value))); }
+        if (!string.IsNullOrWhiteSpace(identification)) { var value = identification.Trim(); query = query.Where(x => x.IdentificationNumber.Contains(value)); }
+        if (!string.IsNullOrWhiteSpace(email)) { var value = email.Trim(); query = query.Where(x => x.Email != null && x.Email.Contains(value)); }
+        if (!string.IsNullOrWhiteSpace(phone)) { var value = phone.Trim(); query = query.Where(x => (x.Phone != null && x.Phone.Contains(value)) || (x.SecondaryPhone != null && x.SecondaryPhone.Contains(value)) || (x.MobilePhone != null && x.MobilePhone.Contains(value))); }
         if (!string.IsNullOrWhiteSpace(search)) { var value = search.Trim(); query = query.Where(x => x.DisplayName.Contains(value) ||
             x.IdentificationNumber.Contains(value) || (x.Email != null && x.Email.Contains(value)) ||
             (x.Phone != null && x.Phone.Contains(value)) || (x.TradeName != null && x.TradeName.Contains(value))); }
@@ -78,13 +83,20 @@ public class ClientsController(AppDbContext db, ITenantContext tenant) : Control
         client.Type = type; client.FirstName = type == ClientTypes.Person ? firstName : null; client.LastName = type == ClientTypes.Person ? lastName : null;
         client.LegalName = type == ClientTypes.Company ? legalName : null; client.TradeName = type == ClientTypes.Company ? tradeName : null;
         client.ContactPerson = type == ClientTypes.Company ? Clean(request.ContactPerson) : null;
+        client.Dv = type == ClientTypes.Company ? Clean(request.Dv) : null;
+        client.ContactPersonIdentification = type == ClientTypes.Company ? Clean(request.ContactPersonIdentification) : null;
+        client.ContactPersonEmail = type == ClientTypes.Company ? Clean(request.ContactPersonEmail)?.ToLowerInvariant() : null;
+        client.ContactPersonPhone = type == ClientTypes.Company ? Clean(request.ContactPersonPhone) : null;
         client.DisplayName = type == ClientTypes.Person ? $"{firstName} {lastName}" : tradeName ?? legalName!;
         (client.IdentificationType, client.IdentificationNumber) = ClientIdentificationPolicy.NormalizeAndValidate(type, request.IdentificationType, request.IdentificationNumber);
         client.Email = Clean(request.Email)?.ToLowerInvariant(); client.Phone = Clean(request.Phone); client.SecondaryPhone = Clean(request.SecondaryPhone);
-        client.Address = Clean(request.Address); client.Notes = Clean(request.Notes); client.UpdatedAt = DateTime.UtcNow;
+        client.MobilePhone = Clean(request.MobilePhone); client.Website = Clean(request.Website);
+        client.Address = Clean(request.Address); client.Country = Clean(request.Country); client.ProvinceOrState = Clean(request.ProvinceOrState); client.City = Clean(request.City);
+        client.Notes = Clean(request.Notes); client.UpdatedAt = DateTime.UtcNow;
     }
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     private static ClientDto ToDto(Client x) => new(x.Id, x.Type, x.DisplayName, x.IdentificationType, x.IdentificationNumber,
         x.Email, x.Phone, x.SecondaryPhone, x.Address, x.Notes, x.Status, x.FirstName, x.LastName, x.LegalName, x.TradeName,
-        x.ContactPerson, x.CreatedAt, x.UpdatedAt);
+        x.ContactPerson, x.CreatedAt, x.UpdatedAt, x.MobilePhone, x.Website, x.Country, x.ProvinceOrState, x.City,
+        x.Dv, x.ContactPersonIdentification, x.ContactPersonEmail, x.ContactPersonPhone);
 }

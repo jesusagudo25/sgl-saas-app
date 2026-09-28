@@ -5,6 +5,7 @@ import App from './App';
 import './styles.css';
 import './adenda.css';
 import './responsive-fixes.css';
+import './adenda2.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <BrowserRouter><AuthProvider><OrganizationProvider><App /></OrganizationProvider></AuthProvider></BrowserRouter>
 );
