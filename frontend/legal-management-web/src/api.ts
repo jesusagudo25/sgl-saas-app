@@ -21,6 +21,10 @@ export type CaseOptions = { clients: CaseOption[]; responsibleMemberships: CaseO
 export type CatalogItem = CaseOption & { parentId?: string; isActive: boolean; sortOrder: number; code?: string; isOpen?: boolean; isClosed?: boolean; isInnocent?: boolean; isGuilty?: boolean };
 export type FollowUp = { id: string; occurredAt: string; status: string; competence: string; competenceDetail: string; description: string; createdBy: string; createdAt: string };
 export type CaseTask = { id: string; title: string; description?: string; assignedMembershipId?: string; assignedName?: string; priority: string; status: string; dueAt?: string; completedAt?: string; createdAt: string };
+export type CalendarEvent = { id: string; caseId?: string; caseName?: string; title: string; description?: string;
+  eventType: string; status: string; assignedMembershipId?: string; assignedName?: string; startsAt: string; endsAt: string;
+  allDay: boolean; location?: string; meetingUrl?: string; createdByMembershipId: string; createdAt: string; updatedAt: string };
+export type CalendarOptions = { cases: CaseOption[]; responsibleMemberships: CaseOption[] };
 export type Page<T> = { items: T[]; page: number; pageSize: number; totalCount: number; totalPages: number };
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 

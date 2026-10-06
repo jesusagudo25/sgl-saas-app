@@ -59,11 +59,11 @@ try {
     await page.getByRole('button',{name:'Seguimientos',exact:true}).click(); await page.getByText(originalFollowUp.description,{exact:true}).waitFor(); await check(width,'follow-ups');
     await page.getByRole('button',{name:'+ Agregar seguimiento',exact:true}).click(); await page.locator('dialog[open]').waitFor();
     await page.getByLabel('Estado *',{exact:true}).fill('Abierto'); await page.getByLabel('Competencia General *',{exact:true}).fill('Civil');
-    await expect(page.locator('input[name="competenceDetailId"]')).toHaveValue(''); await page.getByLabel('Competencia Detalle *',{exact:true}).fill('Responsabilidad contractual');
+    await expect(page.locator('input[name="competenceDetailId"]')).toHaveValue(''); await expect(page.locator('datalist option[value="Responsabilidad contractual"]')).toHaveCount(1); await page.getByLabel('Competencia Detalle *',{exact:true}).fill('Responsabilidad contractual'); await expect(page.locator('input[name="competenceDetailId"]')).toHaveValue(detail);
     await expect(page.locator('input[name="competenceDetailId"]')).toHaveValue(detail);
     await page.getByLabel('Competencia General *',{exact:true}).fill('Sin detalles'); await expect(page.getByLabel('Competencia Detalle *',{exact:true})).toHaveValue('');
     await page.getByText('Esta competencia no tiene detalles activos.',{exact:false}).waitFor(); await expect(page.getByRole('button',{name:'Guardar',exact:true})).toBeDisabled();
-    await page.getByLabel('Competencia General *',{exact:true}).fill('Civil'); await page.getByLabel('Competencia Detalle *',{exact:true}).fill('Responsabilidad contractual');
+    await page.getByLabel('Competencia General *',{exact:true}).fill('Civil'); await expect(page.locator('datalist option[value="Responsabilidad contractual"]')).toHaveCount(1); await page.getByLabel('Competencia Detalle *',{exact:true}).fill('Responsabilidad contractual'); await expect(page.locator('input[name="competenceDetailId"]')).toHaveValue(detail);
     await page.locator('textarea[name="description"]').fill('Nueva actuación judicial'); await check(width,'new-follow-up');
     await page.getByRole('button',{name:'Guardar',exact:true}).click(); await page.getByRole('status').filter({hasText:'Seguimiento registrado.'}).waitFor(); expect(lastBody.competenceDetailId).toBe(detail); expect(lastBody.occurredAt).toMatch(/Z$/);
     await page.getByRole('button',{name:'Tareas',exact:true}).click(); await page.getByText('⚠ Vencida',{exact:true}).waitFor(); await page.getByText('⚠ Próxima a vencer',{exact:true}).waitFor(); await check(width,'tasks');
