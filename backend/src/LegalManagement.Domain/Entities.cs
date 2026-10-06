@@ -188,3 +188,54 @@ public class CaseStatus : OrganizationCatalog
 public class CaseType : OrganizationCatalog { }
 public class Court : OrganizationCatalog { }
 public class Jurisdiction : OrganizationCatalog { }
+
+public class LegalCompetence : OrganizationCatalog
+{
+    public Guid? ParentId { get; set; }
+    public LegalCompetence? Parent { get; set; }
+}
+
+public class CaseFollowUp
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrganizationId { get; set; }
+    public Guid CaseId { get; set; }
+    public Guid CaseStatusId { get; set; }
+    public CaseStatus CaseStatus { get; set; } = null!;
+    public Guid CompetenceId { get; set; }
+    public LegalCompetence Competence { get; set; } = null!;
+    public Guid CompetenceDetailId { get; set; }
+    public LegalCompetence CompetenceDetail { get; set; } = null!;
+    public string StatusName { get; set; } = "";
+    public string CompetenceName { get; set; } = "";
+    public string CompetenceDetailName { get; set; } = "";
+    public string Description { get; set; } = "";
+    public DateTime OccurredAt { get; set; }
+    public Guid CreatedByMembershipId { get; set; }
+    public Membership CreatedByMembership { get; set; } = null!;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public static class TaskStatuses
+{
+    public static readonly string[] All = ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
+}
+
+public class CaseTask
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrganizationId { get; set; }
+    public Guid CaseId { get; set; }
+    public string Title { get; set; } = "";
+    public string? Description { get; set; }
+    public Guid? AssignedMembershipId { get; set; }
+    public Membership? AssignedMembership { get; set; }
+    public string Priority { get; set; } = CasePriorities.Medium;
+    public string Status { get; set; } = "PENDING";
+    public DateTime? DueAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public Guid CreatedByMembershipId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}

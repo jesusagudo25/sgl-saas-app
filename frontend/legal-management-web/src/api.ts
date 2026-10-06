@@ -18,7 +18,9 @@ export type LegalCase = { id: string; clientId: string; clientName: string; case
 export type CaseOption = { id: string; name: string };
 export type CaseStatusOption = CaseOption & { code: string; isOpen: boolean; isClosed: boolean; isInnocent: boolean; isGuilty: boolean };
 export type CaseOptions = { clients: CaseOption[]; responsibleMemberships: CaseOption[]; caseStatuses: CaseStatusOption[]; caseTypes: CaseOption[]; courts: CaseOption[]; jurisdictions: CaseOption[] };
-export type CatalogItem = CaseOption & { isActive: boolean; sortOrder: number; code?: string; isOpen?: boolean; isClosed?: boolean; isInnocent?: boolean; isGuilty?: boolean };
+export type CatalogItem = CaseOption & { parentId?: string; isActive: boolean; sortOrder: number; code?: string; isOpen?: boolean; isClosed?: boolean; isInnocent?: boolean; isGuilty?: boolean };
+export type FollowUp = { id: string; occurredAt: string; status: string; competence: string; competenceDetail: string; description: string; createdBy: string; createdAt: string };
+export type CaseTask = { id: string; title: string; description?: string; assignedMembershipId?: string; assignedName?: string; priority: string; status: string; dueAt?: string; completedAt?: string; createdAt: string };
 export type Page<T> = { items: T[]; page: number; pageSize: number; totalCount: number; totalPages: number };
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 

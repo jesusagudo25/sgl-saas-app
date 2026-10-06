@@ -104,7 +104,7 @@ try {
   if (!await page.locator('.sidebar').evaluate(el => el.classList.contains('open'))) throw new Error('Mobile sidebar failed');
   const navFont = await page.locator('.sidebar nav a').first().evaluate(el => Number.parseFloat(getComputedStyle(el).fontSize));
   if (navFont < 10) throw new Error('Mobile drawer labels are hidden');
-  await page.getByRole('button', { name: 'Cerrar menú' }).first().click();
+  await page.locator('.drawer-close').click();
   console.log('PASS mobile drawer');
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.goto('http://127.0.0.1:5173/app/clients');

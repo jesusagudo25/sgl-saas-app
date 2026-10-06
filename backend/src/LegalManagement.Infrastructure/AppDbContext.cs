@@ -25,6 +25,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<CaseType> CaseTypes => Set<CaseType>();
     public DbSet<Court> Courts => Set<Court>();
     public DbSet<Jurisdiction> Jurisdictions => Set<Jurisdiction>();
+    public DbSet<LegalCompetence> LegalCompetences => Set<LegalCompetence>();
+    public DbSet<CaseFollowUp> CaseFollowUps => Set<CaseFollowUp>();
+    public DbSet<CaseTask> CaseTasks => Set<CaseTask>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -127,6 +130,38 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         ConfigureCatalog<CaseType>(b);
         ConfigureCatalog<Court>(b);
         ConfigureCatalog<Jurisdiction>(b);
+        b.Entity<LegalCompetence>(e => {
+            e.Property(x => x.Name).HasMaxLength(240).IsRequired();
+            e.HasIndex(x => new { x.OrganizationId, x.ParentId, x.IsActive });
+            e.HasIndex(x => new { x.OrganizationId, x.ParentId, x.Name }).IsUnique().HasFilter(null);
+            e.HasOne(x => x.Organization).WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Parent).WithMany().HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Restrict);
+        });
+        b.Entity<CaseFollowUp>(e => {
+            e.Property(x => x.Description).HasMaxLength(4000).IsRequired();
+            e.Property(x => x.StatusName).HasMaxLength(160);
+            e.Property(x => x.CompetenceName).HasMaxLength(240);
+            e.Property(x => x.CompetenceDetailName).HasMaxLength(240);
+            e.HasIndex(x => new { x.OrganizationId, x.CaseId, x.OccurredAt });
+            e.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Case>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CaseStatus).WithMany().HasForeignKey(x => x.CaseStatusId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Competence).WithMany().HasForeignKey(x => x.CompetenceId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CompetenceDetail).WithMany().HasForeignKey(x => x.CompetenceDetailId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CreatedByMembership).WithMany().HasForeignKey(x => x.CreatedByMembershipId).OnDelete(DeleteBehavior.Restrict);
+        });
+        b.Entity<CaseTask>(e => {
+            e.Property(x => x.Title).HasMaxLength(240).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.Status).HasMaxLength(20);
+            e.Property(x => x.Priority).HasMaxLength(20);
+            e.HasIndex(x => new { x.OrganizationId, x.CaseId, x.Status, x.DueAt });
+            e.HasIndex(x => new { x.OrganizationId, x.Status, x.DueAt });
+            e.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Case>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.AssignedMembership).WithMany().HasForeignKey(x => x.AssignedMembershipId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Membership>().WithMany().HasForeignKey(x => x.CreatedByMembershipId).OnDelete(DeleteBehavior.Restrict);
+        });
         b.Entity<CaseStatus>(e => {
             e.Property(x => x.Name).HasMaxLength(160).IsRequired();
             e.Property(x => x.Code).HasMaxLength(80).IsRequired();
