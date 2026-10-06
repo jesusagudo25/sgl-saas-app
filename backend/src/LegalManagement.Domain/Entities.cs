@@ -222,6 +222,38 @@ public static class TaskStatuses
     public static readonly string[] All = ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
 }
 
+public static class CalendarEventStatuses
+{
+    public static readonly string[] All = ["SCHEDULED", "COMPLETED", "CANCELLED"];
+}
+
+public static class CalendarEventTypes
+{
+    public static readonly string[] All = ["HEARING", "MEETING", "DEADLINE", "CALL", "VISIT", "OTHER"];
+}
+
+public class CalendarEvent
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrganizationId { get; set; }
+    public Guid? CaseId { get; set; }
+    public Case? Case { get; set; }
+    public string Title { get; set; } = "";
+    public string? Description { get; set; }
+    public string EventType { get; set; } = "OTHER";
+    public string Status { get; set; } = "SCHEDULED";
+    public Guid? AssignedMembershipId { get; set; }
+    public Membership? AssignedMembership { get; set; }
+    public DateTime StartsAt { get; set; }
+    public DateTime EndsAt { get; set; }
+    public bool AllDay { get; set; }
+    public string? Location { get; set; }
+    public string? MeetingUrl { get; set; }
+    public Guid CreatedByMembershipId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
 public class CaseTask
 {
     public Guid Id { get; set; } = Guid.NewGuid();

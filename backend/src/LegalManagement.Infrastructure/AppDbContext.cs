@@ -28,6 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<LegalCompetence> LegalCompetences => Set<LegalCompetence>();
     public DbSet<CaseFollowUp> CaseFollowUps => Set<CaseFollowUp>();
     public DbSet<CaseTask> CaseTasks => Set<CaseTask>();
+    public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -130,6 +131,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         ConfigureCatalog<CaseType>(b);
         ConfigureCatalog<Court>(b);
         ConfigureCatalog<Jurisdiction>(b);
+        b.Entity<CalendarEvent>(e => {
+            e.Property(x => x.Title).HasMaxLength(240).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.Location).HasMaxLength(500);
+            e.Property(x => x.MeetingUrl).HasMaxLength(2048);
+            e.Property(x => x.EventType).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            e.HasIndex(x => new { x.OrganizationId, x.StartsAt, x.EndsAt });
+            e.HasIndex(x => new { x.OrganizationId, x.CaseId, x.StartsAt });
+            e.HasIndex(x => new { x.OrganizationId, x.AssignedMembershipId, x.StartsAt });
+            e.HasIndex(x => new { x.OrganizationId, x.Status, x.StartsAt });
+            e.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Case).WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.AssignedMembership).WithMany().HasForeignKey(x => x.AssignedMembershipId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Membership>().WithMany().HasForeignKey(x => x.CreatedByMembershipId).OnDelete(DeleteBehavior.Restrict);
+            e.ToTable("CalendarEvents", t => t.HasCheckConstraint("CK_CalendarEvents_Dates", "[EndsAt] >= [StartsAt]"));
+        });
         b.Entity<LegalCompetence>(e => {
             e.Property(x => x.Name).HasMaxLength(240).IsRequired();
             e.HasIndex(x => new { x.OrganizationId, x.ParentId, x.IsActive });
