@@ -95,6 +95,15 @@ builder.Services.AddRateLimiter(o =>
         }));
 });
 
+var documentOptions = builder.Configuration.GetSection("Documents").Get<DocumentOptions>() ?? new();
+if (documentOptions.MaxBytes is < 1 or > 100 * 1024 * 1024 || documentOptions.Provider != "Local")
+    throw new InvalidOperationException("Configure Documents provider and MaxBytes (1-104857600).");
+builder.Services.Configure<DocumentOptions>(builder.Configuration.GetSection("Documents"));
+builder.Services.AddSingleton<IDocumentStorage>(_ => new LocalDocumentStorage(documentOptions.RootPath, builder.Environment.ContentRootPath));
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = documentOptions.MaxBytes + 1024 * 1024);
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = documentOptions.MaxBytes + 1024 * 1024);
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.Configure<DashboardOptions>(builder.Configuration.GetSection("Dashboard"));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 

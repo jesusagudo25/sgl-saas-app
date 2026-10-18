@@ -30,6 +30,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<CaseTask> CaseTasks => Set<CaseTask>();
     public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
 
+    public DbSet<CaseDocument> CaseDocuments => Set<CaseDocument>();
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
@@ -127,6 +129,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.HasOne(x => x.CaseTypeReference).WithMany().HasForeignKey(x => x.CaseTypeId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.CourtReference).WithMany().HasForeignKey(x => x.CourtId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.JurisdictionReference).WithMany().HasForeignKey(x => x.JurisdictionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        b.Entity<CaseDocument>(e => {
+            e.Property(x => x.OriginalFileName).HasMaxLength(240).IsRequired();
+            e.Property(x => x.StoredFileName).HasMaxLength(80).IsRequired();
+            e.Property(x => x.StorageKey).HasMaxLength(80).IsRequired();
+            e.Property(x => x.Extension).HasMaxLength(12).IsRequired();
+            e.Property(x => x.ContentType).HasMaxLength(160).IsRequired();
+            e.Property(x => x.DocumentType).HasMaxLength(30).IsRequired();
+            e.Property(x => x.StorageProvider).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Notes).HasMaxLength(4000);
+            e.Property(x => x.IsDeleted).IsConcurrencyToken();
+            e.HasIndex(x => new { x.OrganizationId, x.CaseId, x.IsDeleted, x.UploadedAt });
+            e.HasIndex(x => new { x.OrganizationId, x.UploadedAt });
+            e.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Case>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.UploadedByMembership).WithMany().HasForeignKey(x => x.UploadedByMembershipId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Membership>().WithMany().HasForeignKey(x => x.DeletedByMembershipId).OnDelete(DeleteBehavior.Restrict);
         });
         ConfigureCatalog<CaseType>(b);
         ConfigureCatalog<Court>(b);

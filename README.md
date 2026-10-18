@@ -110,3 +110,7 @@ Para ejecutar solamente las pruebas de aislamiento:
 Set-Location backend
 dotnet test --filter "TenantIsolation|CompleteMultiTenantFlow"
 ```
+
+## Sprint 5
+
+Documentos por caso y Dashboard operativo: configuración, convenciones, permisos y validación en [docs/sprint5.md](docs/sprint5.md).

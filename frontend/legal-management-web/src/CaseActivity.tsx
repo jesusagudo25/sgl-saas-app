@@ -45,6 +45,7 @@ export function CaseActivity({ caseId, mode }: { caseId: string; mode: 'follow-u
   }, [general]);
   useEffect(() => { if (open && !dialog.current?.open) dialog.current?.showModal(); else if (!open) dialog.current?.close(); }, [open]);
   function show(item: CaseTask | null = null) { setEditing(item); setGeneral(''); setError(''); setOpen(true); }
+  useEffect(() => { if (tasks && new URLSearchParams(location.search).get('new') === '1') show(); }, []);
   function close() { if (!busy) setOpen(false); }
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); const d = new FormData(e.currentTarget); setError(''); setSuccess('');

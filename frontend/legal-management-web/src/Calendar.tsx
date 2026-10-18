@@ -58,6 +58,7 @@ export function Calendar({ caseId, caseName }: { caseId?: string; caseName?: str
     setEnds(event ? event.allDay ? event.endsAt.slice(0,10) : localValue(event.endsAt) : localValue(new Date(now.getTime()+3600000).toISOString()));
     setOpen(true);
   }
+  useEffect(() => { if (new URLSearchParams(location.search).get('new') === '1') show(); }, []);
   function close() { if (!busy) setOpen(false); }
   function toggleAllDay(value: boolean) {
     setAllDay(value); setStarts(value ? starts.slice(0,10) : `${starts}T09:00`); setEnds(value ? ends.slice(0,10) : `${ends}T10:00`);

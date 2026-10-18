@@ -223,6 +223,91 @@ namespace LegalManagement.Infrastructure.Migrations
                     b.ToTable("Cases");
                 });
 
+            modelBuilder.Entity("LegalManagement.Domain.CaseDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedByMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)");
+
+                    b.Property<bool>("IsDeleted")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("StorageProvider")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UploadedByMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseId");
+
+                    b.HasIndex("DeletedByMembershipId");
+
+                    b.HasIndex("UploadedByMembershipId");
+
+                    b.HasIndex("OrganizationId", "UploadedAt");
+
+                    b.HasIndex("OrganizationId", "CaseId", "IsDeleted", "UploadedAt");
+
+                    b.ToTable("CaseDocuments");
+                });
+
             modelBuilder.Entity("LegalManagement.Domain.CaseFollowUp", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1163,6 +1248,34 @@ namespace LegalManagement.Infrastructure.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("ResponsibleMembership");
+                });
+
+            modelBuilder.Entity("LegalManagement.Domain.CaseDocument", b =>
+                {
+                    b.HasOne("LegalManagement.Domain.Case", null)
+                        .WithMany()
+                        .HasForeignKey("CaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LegalManagement.Domain.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("DeletedByMembershipId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("LegalManagement.Domain.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LegalManagement.Domain.Membership", "UploadedByMembership")
+                        .WithMany()
+                        .HasForeignKey("UploadedByMembershipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UploadedByMembership");
                 });
 
             modelBuilder.Entity("LegalManagement.Domain.CaseFollowUp", b =>

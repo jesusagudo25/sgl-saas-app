@@ -75,9 +75,9 @@ export function finishLogout() {
   loggingOut = false;
 }
 
-export async function api<T>(path: string, options: RequestInit = {}, auth = true, tenantId = organizationId): Promise<T> {
+export async function api<T>(path: string, options: RequestInit = {}, auth = true, tenantId = organizationId, blob = false): Promise<T> {
   const send = () => fetch(`/api${path}`, { ...options, credentials: 'include', headers: {
-    ...(options.body ? { 'Content-Type': 'application/json' } : {}), 'X-CSRF': '1',
+    ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), 'X-CSRF': '1',
     ...(auth && accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     ...(tenantId ? { 'X-Organization-Id': tenantId } : {}), ...options.headers
   } });
@@ -87,6 +87,7 @@ export async function api<T>(path: string, options: RequestInit = {}, auth = tru
     response = await send();
     if (response.status === 401) clearSession();
   }
+  if (blob && response.ok) return await response.blob() as T;
   return parse<T>(response);
 }
 export const post = <T,>(path: string, body?: unknown, auth = true, tenantId?: string | null) =>

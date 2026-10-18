@@ -12,6 +12,7 @@ namespace LegalManagement.IntegrationTests;
 public sealed class LegalManagementApiFactory : WebApplicationFactory<Program>
 {
     private readonly string databaseName = $"LegalManagementTests_{Guid.NewGuid():N}";
+    public TimeProvider Clock { get; } = new FixedTestClock();
     private bool databaseDeleted;
     private string ConnectionString => $"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True";
 
@@ -27,12 +28,15 @@ public sealed class LegalManagementApiFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenMinutes"] = "15",
                 ["Jwt:RefreshTokenDays"] = "7",
                 ["ConnectionStrings:DefaultConnection"] = ConnectionString,
+                ["Documents:RootPath"] = Path.Combine(Path.GetTempPath(), databaseName, "documents"),
                 ["FrontendUrl"] = "http://localhost",
                 ["Cors:AllowedOrigins:0"] = "http://localhost"
             }));
 
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton(Clock);
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<AppDbContext>();
             services.AddDbContext<AppDbContext>(options => options.UseSqlServer(ConnectionString));
@@ -57,4 +61,9 @@ public sealed class LegalManagementApiFactory : WebApplicationFactory<Program>
         }
         base.Dispose(disposing);
     }
+}
+
+internal sealed class FixedTestClock : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => new(2026, 10, 18, 15, 0, 0, TimeSpan.Zero);
 }

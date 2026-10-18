@@ -71,6 +71,8 @@ public sealed class ApiErrors(RequestDelegate next, ILogger<ApiErrors> logger)
         {
             var (status, title) = ex switch {
                 ApiException a => (a.Status, a.Message),
+                BadHttpRequestException b => (b.StatusCode, "Solicitud inv?lida o demasiado grande."),
+                InvalidDataException => (400, "Contenido de solicitud inv?lido."),
                 DbUpdateConcurrencyException => (409, "La operación ya fue procesada. Actualiza e intenta de nuevo."),
                 DbUpdateException => (409, "No se pudo guardar: el registro ya existe o cambió."),
                 _ => (500, "Ocurrió un error inesperado.")
